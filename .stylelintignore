@@ -1,6 +1,6 @@
 .history
-.github
 .vscode
+.github
 coverage
 dist
 node_modules

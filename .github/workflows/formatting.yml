@@ -1,0 +1,49 @@
+# Original by Spatie licensed as MIT
+# https://github.com/spatie/package-skeleton-laravel/blob/main/.github/workflows/fix-php-code-style-issues.yml
+
+name: Run Formatter
+
+on:
+  push:
+    paths:
+      - '.github/workflows/formatting.yml'
+      - '**.js'
+      - '**.ts'
+      - '**.css'
+      - '**.scss'
+      - '**.sass'
+      - 'package.json'
+      - 'package-lock.json'
+
+permissions:
+  contents: write
+
+jobs:
+  formatting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+
+      - name: Install node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Format scripts
+        run: npm run format:scripts
+
+      - name: Format styles
+        run: npm run format:styles
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: ":art: Fix styling"
