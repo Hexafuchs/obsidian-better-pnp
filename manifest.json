@@ -1,10 +1,10 @@
 {
-	"id": "better-pnp",
-	"name": "Better Pen and Paper",
-	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Dynamic templates for better pen and paper writing.",
-	"author": "Leo",
-	"authorUrl": "https://github.com/EinfachLeo",
-	"isDesktopOnly": false
+  "id": "better-pnp",
+  "name": "Better Pen and Paper",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Dynamic templates for better pen and paper writing.",
+  "author": "Leo",
+  "authorUrl": "https://github.com/EinfachLeo",
+  "isDesktopOnly": false
 }
