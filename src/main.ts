@@ -1,8 +1,7 @@
-import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { Extension } from '@codemirror/state';
+import { App, MarkdownPostProcessorContext, Plugin, PluginManifest, PluginSettingTab, Setting } from 'obsidian';
 import Parser from './parser';
 import { BPSettings } from './types';
-import viewInlinePlugin from './view';
+import viewInlinePlugin, { viewRender } from './view';
 
 const DEFAULT_SETTINGS: BPSettings = {
   initializer: '#',
@@ -12,14 +11,30 @@ export default class BPPlugin extends Plugin {
   settings: BPSettings;
   parser: Parser;
 
+  constructor(app: App, manifest: PluginManifest) {
+    super(app, manifest);
+  }
+
   async onload() {
     await this.loadSettings();
 
     this.addSettingTab(new BPSettingTab(this.app, this));
 
-    this.registerEditorExtension(viewInlinePlugin(this.app, this.settings));
+    //this.registerEditorExtension(viewInlinePlugin(this.app, this.settings));
+
+    this.registerPriorityMarkdownPostProcessor(-100, async (el, ctx) => {
+      viewRender(el, ctx, ctx.sourcePath, this.settings, this.app);
+    });
 
     this.parser = new Parser(this.app);
+  }
+
+  public registerPriorityMarkdownPostProcessor(
+    priority: number,
+    processor: (el: HTMLElement, ctx: MarkdownPostProcessorContext) => Promise<void>
+  ) {
+    const registered = this.registerMarkdownPostProcessor(processor);
+    registered.sortOrder = priority;
   }
 
   onunload() {}

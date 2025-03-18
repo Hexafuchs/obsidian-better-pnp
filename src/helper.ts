@@ -16,9 +16,13 @@ export function selectionAndRangeOverlap(view: EditorView, node: SyntaxNode) {
   return false;
 }
 
-export function isInlineQuery(prefix: string, view: EditorView, node: SyntaxNode) {
-  const text = getTextFromNode(view, node);
+export function isInlineQuery(prefix: string, text: string): boolean {
   return text.startsWith(prefix);
+}
+
+export function isInlineQueryNode(prefix: string, view: EditorView, node: SyntaxNode) {
+  const text = getTextFromNode(view, node);
+  return isInlineQuery(prefix, text);
 }
 
 export function getProps(node: SyntaxNode) {

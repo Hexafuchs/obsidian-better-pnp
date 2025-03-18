@@ -6,6 +6,8 @@ import { getText, getTextFromNode } from './helper';
 import { Literal, BPSettings } from './types';
 import { InlineWidget } from './widget';
 
+export type RenderedHTML = [HTMLSpanElement | null, string | null];
+
 export class Renderer {
   app: App;
   parser: Parser;
@@ -17,35 +19,40 @@ export class Renderer {
     this.settings = settings;
   }
 
-  renderWidget(node: SyntaxNode, view: EditorView) {
-    // safety net against unclosed inline code
-    if (getText(view, node.to, node.to + 1) === '\n') return;
-
-    const text = getTextFromNode(view, node);
-    let content: string = '';
-    let result: Literal = '';
-    const renderRootElement = createSpan({
-      cls: ['betterpnp', 'betterpnp-inline'],
-    });
+  renderHtml(code: string): RenderedHTML {
     /* If the query result is predefined text (e.g. in the case of errors), set innerText to it.
      * Otherwise, pass on an empty element and fill it in later.
      * This is necessary because {@link InlineWidget.toDOM} is synchronous but some rendering
      * asynchronous.
      */
-    if (text.startsWith(this.settings.initializer)) {
-      content = text.substring(this.settings.initializer.length).trim();
+    if (code.startsWith(this.settings.initializer)) {
+      let content: string = '';
+      let result: Literal = '';
+      const renderRootElement = createSpan({
+        cls: ['betterpnp', 'betterpnp-inline'],
+      });
+      content = code.substring(this.settings.initializer.length).trim();
       try {
         this.renderFieldFromInput(content).then(result => (renderRootElement.innerHTML = result));
       } catch (error) {
         result = `Error for '${content}': ${error} \n\n${error.stack}}`;
         renderRootElement.innerText = result;
       }
-    } else {
-      return;
+      return [renderRootElement, content];
     }
+    return [null, null];
+  }
+
+  renderWidget(node: SyntaxNode, view: EditorView) {
+    // safety net against unclosed inline code
+    if (getText(view, node.to, node.to + 1) === '\n') return;
+
+    const text = getTextFromNode(view, node);
+    const [el, content] = this.renderHtml(text);
+    if (el === null || content === null) return;
 
     return Decoration.replace({
-      widget: new InlineWidget([], content, renderRootElement, view),
+      widget: new InlineWidget([], content, el, view),
       inclusive: false,
       block: false,
     }).range(node.from - 1, node.to + 1);

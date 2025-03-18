@@ -27,6 +27,5 @@ export function colorLinesFlag(colors: Array<string>) {
   currentBottom = currentTop;
   currentTop = currentBottom + stepSize;
   output += `<path d="M2 ${currentBottom}H22V${currentTop - 2}C22 ${currentTop - 2 + 1.046} 21.1046 ${currentTop} 20 ${currentTop}H4C2.89543 ${currentTop} 2 ${currentTop - 2 + 1.046} 2 ${currentTop - 2}V${currentBottom}Z" fill="${colors[colors.length - 1]}"/>`;
-  console.log(output);
   return asSVG(output, 24, 24);
 }

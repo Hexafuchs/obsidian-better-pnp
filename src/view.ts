@@ -1,10 +1,18 @@
-import { App, Component, editorLivePreviewField, MetadataCache, TFile } from 'obsidian';
+import {
+  App,
+  Component,
+  editorLivePreviewField,
+  MarkdownPostProcessorContext,
+  MarkdownRenderChild,
+  MetadataCache,
+  TFile,
+} from 'obsidian';
 import { Decoration, DecorationSet, EditorView, ViewPlugin, ViewUpdate } from '@codemirror/view';
 import { Range, StateEffect, StateEffectType } from '@codemirror/state';
 import { syntaxTree } from '@codemirror/language';
 import { SyntaxNode } from '@lezer/common';
 import { PluginValue } from '@codemirror/view';
-import { selectionAndRangeOverlap, isInlineQuery, getProps, getCurrentFileFromView } from './helper';
+import { selectionAndRangeOverlap, isInlineQuery, getProps, getCurrentFileFromView, isInlineQueryNode } from './helper';
 import { BPSettings } from './types';
 import { Renderer } from './render';
 
@@ -16,10 +24,7 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
       component: Component;
       renderer: Renderer;
       frontmatterIsDirty: boolean;
-      oldFrontmatter: any;
-      metadataCache: MetadataCache;
-      file: TFile | null;
-      debounceTask: NodeJS.Timeout;
+      frontmatterObserver: FrontmatterObserver;
 
       constructor(view: EditorView) {
         this.renderer = new Renderer(app, settings);
@@ -28,21 +33,7 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
         this.decorations = this.inlineRender(view) ?? Decoration.none;
         this.decorationEffect = StateEffect.define();
         this.frontmatterIsDirty = false;
-        this.oldFrontmatter = null;
-        this.metadataCache = app.metadataCache;
-        this.file = app.workspace.getActiveFile();
-
-        if (this.file) {
-          this.metadataCache.on('changed', changedFile => {
-            if (changedFile.path === this.file?.path) {
-              // Debounce logic here
-              clearTimeout(this.debounceTask);
-              this.debounceTask = setTimeout(() => {
-                this.frontmatterIsDirty = true;
-              }, 250); // 250ms debounce
-            }
-          });
-        }
+        this.frontmatterObserver = new FrontmatterObserver(app, () => (this.frontmatterIsDirty = true));
       }
 
       private checkIfLivePreviewMode(update: ViewUpdate) {
@@ -86,17 +77,6 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
 
       shouldRenderNode(view: EditorView, node: SyntaxNode) {
         const props = getProps(node);
-        //if (props.has("hmd-frontmatter")) {
-        //    const file = app.workspace.getActiveFile();
-        //    if (file !== null) {
-        //        app.fileManager.processFrontMatter(file, (frontmatter) => {
-        //            if (JSON.stringify(frontmatter) != JSON.stringify(this.oldFrontmatter)) {
-        //                this.oldFrontmatter = structuredClone(frontmatter);
-        //                this.frontmatterIsDirty = true;
-        //            }
-        //        });
-        //    }
-        // }
 
         // check if current node is inline code
         if (!props.has('inline-code') || props.has('formatting')) {
@@ -104,14 +84,12 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
         }
         return {
           render: !selectionAndRangeOverlap(view, node),
-          isQuery: isInlineQuery(settings.initializer, view, node),
+          isQuery: isInlineQueryNode(settings.initializer, view, node),
         };
       }
 
       addDeco(node: SyntaxNode, view: EditorView) {
         let exists = false;
-        //console.log("A")
-        //console.log(this.decorations);
         this.decorations.between(node.from - 1, node.to + 1, () => {
           exists = true;
         });
@@ -119,21 +97,19 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
           if (!this.frontmatterIsDirty) {
             return;
           }
-          //console.log("B")
           this.removeDeco(node);
         }
 
         const currentFile = getCurrentFileFromView(view);
         if (!currentFile) return;
 
-        const newDeco = this.renderer.renderWidget(node, view, currentFile)?.value;
+        const newDeco = this.renderer.renderWidget(node, view)?.value;
         if (!newDeco) return;
 
         this.decorations = this.decorations.update({
           add: [{ from: node.from - 1, to: node.to + 1, value: newDeco }],
         });
         this.frontmatterIsDirty = false;
-        //console.log(this.decorations);
       }
 
       removeDeco(node: SyntaxNode) {
@@ -158,7 +134,7 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
             to,
             enter: ({ node }) => {
               if (!this.shouldRenderNode(view, node).render) return;
-              const widget = this.renderer.renderWidget(node, view, currentFile);
+              const widget = this.renderer.renderWidget(node, view);
               if (widget) widgets.push(widget);
             },
           });
@@ -176,9 +152,6 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
         const cursor = v.decorations.iter();
         let deco = cursor.value;
         while (deco !== null) {
-          //console.log(deco.spec.widget.el);
-          //console.log(deco.spec.widget.el.innerText)
-          //console.log(deco.spec.widget.el.innerHTML)
           cursor.next();
           deco = cursor.value;
         }
@@ -186,4 +159,112 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
       },
     }
   );
+}
+
+export function viewRender(
+  el: HTMLElement,
+  component: Component | MarkdownPostProcessorContext,
+  sourcePath: string,
+  settings: BPSettings,
+  app: App
+) {
+  // Search for <code> blocks inside this element; for each one, look for things of the form `= ...`.
+  const codeblocks = el.querySelectorAll('code');
+  for (let index = 0; index < codeblocks.length; index++) {
+    const codeblock = codeblocks.item(index);
+
+    // Skip code inside of pre elements
+    if (codeblock.parentElement && codeblock.parentElement.nodeName.toLowerCase() == 'pre') continue;
+
+    const text = codeblock.innerText.trim();
+    if (!isInlineQuery(settings.initializer, text)) {
+      continue;
+    }
+    component.addChild(new ViewRenderPlugin(text, el, codeblock, app, settings));
+  }
+}
+
+type FrontmatterCallback = (frontmatter: any) => void;
+
+export class FrontmatterObserver {
+  metadataCache: MetadataCache;
+  file: TFile;
+  debounceTask: NodeJS.Timeout;
+  oldFrontmatter: any;
+  running: boolean = true;
+
+  public constructor(
+    public app: App,
+    public callback: FrontmatterCallback
+  ) {
+    this.metadataCache = app.metadataCache;
+    const file = app.workspace.getActiveFile();
+    if (file === null) return;
+    this.file = file;
+
+    this.metadataCache.on('changed', this.run);
+  }
+
+  stop() {
+    this.running = false;
+    this.metadataCache.off('changed', this.run);
+  }
+
+  run(changedFile: TFile) {
+    if (this === undefined || !this.running) {
+      return;
+    }
+    if (changedFile.path === this.file.path) {
+      // Debounce logic here
+      clearTimeout(this.debounceTask);
+      this.debounceTask = setTimeout(() => {
+        this.app.fileManager.processFrontMatter(this.file, frontmatter => {
+          if (JSON.stringify(frontmatter) != JSON.stringify(this.oldFrontmatter)) {
+            this.oldFrontmatter = structuredClone(frontmatter);
+            this.callback(structuredClone(frontmatter));
+          }
+        });
+      }, 400); // 400ms debounce
+    }
+  }
+}
+
+export class ViewRenderPlugin extends MarkdownRenderChild {
+  renderer: Renderer;
+  frontmatterObserver: FrontmatterObserver;
+  oldElement: HTMLElement | null = null;
+
+  public constructor(
+    public code: string,
+    public container: HTMLElement,
+    public codeblock: HTMLElement,
+    public app: App,
+    public settings: BPSettings
+  ) {
+    super(container);
+    this.renderer = new Renderer(app, settings);
+    this.frontmatterObserver = new FrontmatterObserver(app, () => this.render());
+  }
+
+  onload() {
+    this.render();
+    // when the DOM is shown (sidebar expands, tab selected, nodes scrolled into view).
+    //this.register(this.container.onNodeInserted(this.render));
+  }
+
+  onunload() {
+    this.frontmatterObserver.stop();
+  }
+
+  render() {
+    const [el, content] = this.renderer.renderHtml(this.code);
+    if (el === null || content === null) return;
+
+    if (this.oldElement === null) {
+      this.codeblock.replaceWith(el);
+    } else {
+      this.oldElement.replaceWith(el);
+    }
+    this.oldElement = el;
+  }
 }
