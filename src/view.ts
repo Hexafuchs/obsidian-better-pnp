@@ -2,6 +2,7 @@ import {
   App,
   Component,
   editorLivePreviewField,
+  EventRef,
   MarkdownPostProcessorContext,
   MarkdownRenderChild,
   MetadataCache,
@@ -13,8 +14,8 @@ import { syntaxTree } from '@codemirror/language';
 import { SyntaxNode } from '@lezer/common';
 import { PluginValue } from '@codemirror/view';
 import { selectionAndRangeOverlap, isInlineQuery, getProps, getCurrentFileFromView, isInlineQueryNode } from './helper';
-import { BPSettings } from './types';
 import { Renderer } from './render';
+import { BPSettings } from './settings';
 
 export default function viewInlinePlugin(app: App, settings: BPSettings) {
   return ViewPlugin.fromClass(
@@ -33,7 +34,7 @@ export default function viewInlinePlugin(app: App, settings: BPSettings) {
         this.decorations = this.inlineRender(view) ?? Decoration.none;
         this.decorationEffect = StateEffect.define();
         this.frontmatterIsDirty = false;
-        this.frontmatterObserver = new FrontmatterObserver(app, () => (this.frontmatterIsDirty = true));
+        //this.frontmatterObserver = new FrontmatterObserver(app, () => (this.frontmatterIsDirty = true));
       }
 
       private checkIfLivePreviewMode(update: ViewUpdate) {
@@ -166,7 +167,8 @@ export function viewRender(
   component: Component | MarkdownPostProcessorContext,
   sourcePath: string,
   settings: BPSettings,
-  app: App
+  app: App,
+  observer: FrontmatterObserver
 ) {
   // Search for <code> blocks inside this element; for each one, look for things of the form `= ...`.
   const codeblocks = el.querySelectorAll('code');
@@ -180,7 +182,7 @@ export function viewRender(
     if (!isInlineQuery(settings.initializer, text)) {
       continue;
     }
-    component.addChild(new ViewRenderPlugin(text, el, codeblock, app, settings));
+    component.addChild(new ViewRenderPlugin(text, el, codeblock, app, settings, observer));
   }
 }
 
@@ -188,40 +190,45 @@ type FrontmatterCallback = (frontmatter: any) => void;
 
 export class FrontmatterObserver {
   metadataCache: MetadataCache;
-  file: TFile;
   debounceTask: NodeJS.Timeout;
   oldFrontmatter: any;
   running: boolean = true;
+  eventRef: EventRef;
+  callbacks: Array<FrontmatterCallback> = [];
 
   public constructor(
     public app: App,
-    public callback: FrontmatterCallback
+    public path: string
   ) {
     this.metadataCache = app.metadataCache;
-    const file = app.workspace.getActiveFile();
-    if (file === null) return;
-    this.file = file;
 
-    this.metadataCache.on('changed', this.run);
+    this.eventRef = this.metadataCache.on('changed', file => this.run(file));
   }
 
   stop() {
     this.running = false;
-    this.metadataCache.off('changed', this.run);
+    this.metadataCache.offref(this.eventRef);
+  }
+
+  register(callback: FrontmatterCallback) {
+    this.callbacks.push(callback);
   }
 
   run(changedFile: TFile) {
+    console.log(changedFile.path, changedFile, this, this === undefined);
     if (this === undefined || !this.running) {
       return;
     }
-    if (changedFile.path === this.file.path) {
+    if (changedFile.path === this.path) {
       // Debounce logic here
       clearTimeout(this.debounceTask);
       this.debounceTask = setTimeout(() => {
-        this.app.fileManager.processFrontMatter(this.file, frontmatter => {
+        this.app.fileManager.processFrontMatter(changedFile, frontmatter => {
           if (JSON.stringify(frontmatter) != JSON.stringify(this.oldFrontmatter)) {
             this.oldFrontmatter = structuredClone(frontmatter);
-            this.callback(structuredClone(frontmatter));
+            for (const callback of this.callbacks) {
+              callback(structuredClone(frontmatter));
+            }
           }
         });
       }, 400); // 400ms debounce
@@ -239,21 +246,18 @@ export class ViewRenderPlugin extends MarkdownRenderChild {
     public container: HTMLElement,
     public codeblock: HTMLElement,
     public app: App,
-    public settings: BPSettings
+    public settings: BPSettings,
+    public observer: FrontmatterObserver
   ) {
     super(container);
     this.renderer = new Renderer(app, settings);
-    this.frontmatterObserver = new FrontmatterObserver(app, () => this.render());
+    observer.register(() => this.render());
   }
 
   onload() {
     this.render();
     // when the DOM is shown (sidebar expands, tab selected, nodes scrolled into view).
     //this.register(this.container.onNodeInserted(this.render));
-  }
-
-  onunload() {
-    this.frontmatterObserver.stop();
   }
 
   render() {

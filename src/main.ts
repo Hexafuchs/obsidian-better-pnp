@@ -1,15 +1,12 @@
 import { App, MarkdownPostProcessorContext, Plugin, PluginManifest, PluginSettingTab, Setting } from 'obsidian';
 import Parser from './parser';
-import { BPSettings } from './types';
-import viewInlinePlugin, { viewRender } from './view';
-
-const DEFAULT_SETTINGS: BPSettings = {
-  initializer: '#',
-};
+import viewInlinePlugin, { FrontmatterObserver, viewRender } from './view';
+import { BPSettings, BPSettingTab, DEFAULT_SETTINGS } from './settings';
 
 export default class BPPlugin extends Plugin {
   settings: BPSettings;
   parser: Parser;
+  frontmatterObservers: Record<string, FrontmatterObserver> = {};
 
   constructor(app: App, manifest: PluginManifest) {
     super(app, manifest);
@@ -23,10 +20,13 @@ export default class BPPlugin extends Plugin {
     //this.registerEditorExtension(viewInlinePlugin(this.app, this.settings));
 
     this.registerPriorityMarkdownPostProcessor(-100, async (el, ctx) => {
-      viewRender(el, ctx, ctx.sourcePath, this.settings, this.app);
+      if (!(ctx.sourcePath in this.frontmatterObservers)) {
+        this.frontmatterObservers[ctx.sourcePath] = new FrontmatterObserver(this.app, ctx.sourcePath);
+      }
+      viewRender(el, ctx, ctx.sourcePath, this.settings, this.app, this.frontmatterObservers[ctx.sourcePath]);
     });
 
-    this.parser = new Parser(this.app);
+    this.parser = new Parser(this.app, this.settings);
   }
 
   public registerPriorityMarkdownPostProcessor(
@@ -37,7 +37,11 @@ export default class BPPlugin extends Plugin {
     registered.sortOrder = priority;
   }
 
-  onunload() {}
+  onunload() {
+    for (const key in this.frontmatterObservers) {
+      this.frontmatterObservers[key].stop();
+    }
+  }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
@@ -45,33 +49,5 @@ export default class BPPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
-  }
-}
-
-class BPSettingTab extends PluginSettingTab {
-  plugin: BPPlugin;
-
-  constructor(app: App, plugin: BPPlugin) {
-    super(app, plugin);
-    this.plugin = plugin;
-  }
-
-  display(): void {
-    const { containerEl } = this;
-
-    containerEl.empty();
-
-    new Setting(containerEl)
-      .setName('Initializer')
-      .setDesc('Prefix to start rendering a better pnp block')
-      .addText(text =>
-        text
-          .setPlaceholder('!')
-          .setValue(this.plugin.settings.initializer)
-          .onChange(async value => {
-            this.plugin.settings.initializer = value;
-            await this.plugin.saveSettings();
-          })
-      );
   }
 }

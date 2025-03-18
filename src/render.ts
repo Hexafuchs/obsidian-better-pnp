@@ -1,10 +1,11 @@
-import { App, TFile } from 'obsidian';
+import { App } from 'obsidian';
 import { Decoration, EditorView } from '@codemirror/view';
 import { SyntaxNode } from '@lezer/common';
 import Parser from './parser';
 import { getText, getTextFromNode } from './helper';
-import { Literal, BPSettings } from './types';
+import { Literal } from './types';
 import { InlineWidget } from './widget';
+import { BPSettings } from './settings';
 
 export type RenderedHTML = [HTMLSpanElement | null, string | null];
 
@@ -15,7 +16,7 @@ export class Renderer {
 
   constructor(app: App, settings: BPSettings) {
     this.app = app;
-    this.parser = new Parser(app);
+    this.parser = new Parser(app, settings);
     this.settings = settings;
   }
 

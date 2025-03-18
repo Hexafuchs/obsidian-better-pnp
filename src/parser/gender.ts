@@ -5,8 +5,10 @@ import {
   MALE_ICON,
   NON_BINARY_FLAG_ICON,
   TRANSGENDER_FLAG_ICON,
+  TRANSGENDER_ICON,
 } from 'src/icons/gender';
 import { ABBR_MAPPING, TERM_MAPPING } from './base';
+import { BPSettings } from '../settings';
 
 const TRANS_ABBR = ['t'];
 const TRANS_TERMS = ['trans', 'transgender'];
@@ -21,20 +23,36 @@ const INTERSEX_TERMS = ['intersex', 'inter'];
 const AGENDER_ABBR = ['a'];
 const AGENDER_TERMS = ['androgynous', 'andro', 'agender'];
 
-export const GENDER_TERMS_MAPPING: Array<TERM_MAPPING> = [
-  [TRANS_TERMS, TRANSGENDER_FLAG_ICON],
-  [ENBY_TERMS, NON_BINARY_FLAG_ICON],
-  [AGENDER_TERMS, AGENDER_FLAG_ICON],
-  [FEMALE_TERMS, FEMALE_ICON],
-  [MALE_TERMS, MALE_ICON],
-  [INTERSEX_TERMS, INTERSEX_ICON],
-];
+export function genderTermMappings(settings: BPSettings): Array<TERM_MAPPING> {
+  const output: Array<TERM_MAPPING> = [];
 
-export const GENDER_ABBR_MAPPING: Array<ABBR_MAPPING> = [
-  [TRANS_ABBR, TRANSGENDER_FLAG_ICON],
-  [ENBY_ABBR, NON_BINARY_FLAG_ICON],
-  [AGENDER_ABBR, AGENDER_FLAG_ICON],
-  [FEMALE_ABBR, FEMALE_ICON],
-  [MALE_ABBR, MALE_ICON],
-  [INTERSEX_ABBR, INTERSEX_ICON],
-];
+  if (settings.useFlags && settings.preferFlags) output.push([TRANS_TERMS, TRANSGENDER_FLAG_ICON]);
+  else if (settings.useIcons) output.push([TRANS_TERMS, TRANSGENDER_ICON]);
+
+  if (settings.useFlags && settings.preferFlags) output.push([ENBY_TERMS, NON_BINARY_FLAG_ICON]);
+  else if (settings.useIcons) output.push([ENBY_TERMS, NON_BINARY_FLAG_ICON]);
+
+  if (settings.useFlags) output.push([AGENDER_TERMS, AGENDER_FLAG_ICON]);
+  if (settings.useIcons) output.push([FEMALE_TERMS, FEMALE_ICON]);
+  if (settings.useIcons) output.push([MALE_TERMS, MALE_ICON]);
+  if (settings.useIcons) output.push([INTERSEX_TERMS, INTERSEX_ICON]);
+
+  return output;
+}
+
+export function genderAbbrMappings(settings: BPSettings): Array<ABBR_MAPPING> {
+  const output: Array<ABBR_MAPPING> = [];
+
+  if (settings.useFlags && settings.preferFlags) output.push([TRANS_ABBR, TRANSGENDER_FLAG_ICON]);
+  else if (settings.useIcons) output.push([TRANS_ABBR, TRANSGENDER_ICON]);
+
+  if (settings.useFlags && settings.preferFlags) output.push([ENBY_ABBR, NON_BINARY_FLAG_ICON]);
+  else if (settings.useIcons) output.push([ENBY_ABBR, NON_BINARY_FLAG_ICON]);
+
+  if (settings.useFlags) output.push([AGENDER_ABBR, AGENDER_FLAG_ICON]);
+  if (settings.useIcons) output.push([FEMALE_ABBR, FEMALE_ICON]);
+  if (settings.useIcons) output.push([MALE_ABBR, MALE_ICON]);
+  if (settings.useIcons) output.push([INTERSEX_ABBR, INTERSEX_ICON]);
+
+  return output;
+}

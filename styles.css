@@ -1,76 +1,82 @@
 .betterpnp .npc {
-    width: 100%;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 5px;
-    box-sizing: border-box;
-    gap: 10px;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  padding: 5px;
+  width: 100%;
 }
 
 .betterpnp .attribute {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    gap: 1px;
-    background-color: #2a2a2a;
-    padding: 10px;
-    border-radius: 10px;
-    flex-shrink: 0;
-    max-width: 100%;
+  align-items: center;
+  background-color: #2a2a2a;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  gap: 1px;
+  height: 100%;
+  justify-content: center;
+  max-width: 100%;
+  padding: 10px;
 }
 
 .betterpnp .attribute-icon {
-    padding: 4px;
+  padding: 4px;
 }
 
 .betterpnp .attribute-icon svg {
-    height: 36px;
-    width: 36px;
+  height: 36px;
+  width: 36px;
 }
 
-.betterpnp .attribute-key, .attribute-value {
-    flex-basis: 0;
-}
-
-.betterpnp .attribute-key {
-    color: #777;
-    font-size: 10px;
-}
-
-.betterpnp .attribute-value {
-    color: white;
+.betterpnp .attribute-key,
+.attribute-value {
+  flex-basis: 0;
 }
 
 .betterpnp .attribute-key {
-    text-align: right;
-    flex-basis: content;
-    flex-shrink: 0;
-    flex-grow: 0;
-    align-self: flex-start;
+  color: #777;
+  font-size: 10px;
 }
 
 .betterpnp .attribute-value {
-    flex-shrink: 1;
-    flex-grow: 1;
+  color: white;
+}
+
+.betterpnp .attribute-key {
+  align-self: flex-start;
+  flex-basis: content;
+  flex-grow: 0;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.betterpnp .attribute-value {
+  flex-grow: 1;
+  flex-shrink: 1;
 }
 
 .betterpnp .attribute-value-icon {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  align-items: center;
+  display: flex;
+  justify-content: center;
 }
 
 .betterpnp .attribute-separator {
-    width: 100%;
-    flex-grow: 0;
-    flex-shrink: 0;
-    height: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  height: 0;
+  width: 100%;
 }
 
 .betterpnp .attribute-image {
-    max-width: 80% !important;
-    width: 400px !important;
+  max-width: 80% !important;
+  width: 400px !important;
+}
+
+.betterpnp .attribute-color {
+  height: 24px;
+  width: 24px;
 }

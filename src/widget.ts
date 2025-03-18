@@ -1,4 +1,3 @@
-import { editorInfoField } from 'obsidian';
 import { EditorView, WidgetType } from '@codemirror/view';
 
 export class InlineWidget extends WidgetType {

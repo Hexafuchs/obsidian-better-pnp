@@ -1,14 +1,23 @@
 import { App } from 'obsidian';
 
-import { GENDER_ABBR_MAPPING, GENDER_TERMS_MAPPING } from './parser/gender';
 import { ABBR_MAPPING, TERM_MAPPING } from './parser/base';
-import { SEXUALITY_ABBR_MAPPING, SEXUALITY_TERMS_MAPPING } from './parser/sexuality';
+import { genderAbbrMappings, genderTermMappings } from './parser/gender';
+import { BPSettings } from './settings';
+import { sexualityAbbrMappings, sexualityTermMappings } from './parser/sexuality';
+import { t } from './translations';
 
 export default class Parser {
-  app: App;
+  constructor(
+    public app: App,
+    public settings: BPSettings
+  ) {}
 
-  constructor(app: App) {
-    this.app = app;
+  private t(identifier: string): string {
+    const translation = t(this.settings.language, identifier);
+    if (translation === null) {
+      throw new Error('Missing translation for ' + identifier);
+    }
+    return translation;
   }
 
   public parseEntry(type: string, frontmatter: Array<string>) {
@@ -97,8 +106,8 @@ export default class Parser {
     let found = false;
     let output = '';
 
-    if (value.startsWith('!')) {
-      return this.addAttribute(value.substring(1));
+    if (value.startsWith(this.settings.escapePrefix)) {
+      return this.addAttribute(value.substring(this.settings.escapePrefix.length));
     }
 
     for (const [terms, icon] of termMapping) {
@@ -134,11 +143,34 @@ export default class Parser {
   }
 
   addGenderIcon(value: string) {
-    return this.addMultiIcon(value, GENDER_TERMS_MAPPING, GENDER_ABBR_MAPPING);
+    return this.addMultiIcon(value, genderTermMappings(this.settings), genderAbbrMappings(this.settings));
   }
 
   addSexualityIcon(value: string) {
-    return this.addMultiIcon(value, SEXUALITY_TERMS_MAPPING, SEXUALITY_ABBR_MAPPING);
+    return this.addMultiIcon(value, sexualityTermMappings(this.settings), sexualityAbbrMappings(this.settings));
+  }
+
+  addColorNamed(name: string, color: string) {
+    if (color.startsWith(this.settings.escapePrefix)) {
+      return this.addAttributeNamed(name, color.substring(this.settings.escapePrefix.length));
+    }
+    return this.addAttributeNamed(name, `<div class="attribute-color" style="background-color: ${color};"></div>`);
+  }
+
+  addHeightNamed(name: string, height: string) {
+    if (height.startsWith(this.settings.escapePrefix)) {
+      return this.addAttributeNamed(name, height.substring(this.settings.escapePrefix.length));
+    }
+    const unit = this.settings.heightUnit === 'metric' ? 'm' : 'f';
+    return this.addAttributeNamed(name, `${height}${unit}`);
+  }
+
+  addWeightNamed(name: string, weight: string) {
+    if (weight.startsWith(this.settings.escapePrefix)) {
+      return this.addAttributeNamed(name, weight.substring(this.settings.escapePrefix.length));
+    }
+    const unit = this.settings.weightUnit === 'metric' ? 'kg' : 'lbs';
+    return this.addAttributeNamed(name, `${weight}${unit}`);
   }
 
   parseNPC(frontmatter: any) {
@@ -150,17 +182,33 @@ export default class Parser {
     const image = frontmatter['image'];
     const gender = frontmatter['gender'];
     const sexuality = frontmatter['sexuality'];
+    const hairColor = frontmatter['hair_color'];
+    const skinColor = frontmatter['skin_color'];
+    const weight = frontmatter['weight'];
+    const height = frontmatter['height'];
+    const species = frontmatter['species'];
+    const characteristics = frontmatter['characteristics'];
+    const notes = frontmatter['notes'];
 
     let element = '<div class="npc">';
     if (name) element += this.addAttribute(name);
     if (age) element += this.addAttribute(age);
     if (gender) element += this.addGenderIcon(gender);
     if (sexuality) element += this.addSexualityIcon(sexuality);
-    if (job) element += this.addAttribute(job);
     element += '</div>';
     element += '<div class="npc">';
-    if (purpose) element += this.addAttributeNamed('Zweck', purpose);
-    if (goal) element += this.addAttributeNamed('Ziel', goal);
+    if (height) element += this.addHeightNamed(this.t('height'), height);
+    if (weight) element += this.addWeightNamed(this.t('weight'), weight);
+    if (hairColor) element += this.addColorNamed(this.t('hair'), hairColor);
+    if (skinColor) element += this.addColorNamed(this.t('skin'), skinColor);
+    if (species) element += this.addAttributeNamed(this.t('species'), species);
+    element += '</div>';
+    element += '<div class="npc">';
+    if (job) element += this.addAttributeNamed(this.t('job'), job);
+    if (purpose) element += this.addAttributeNamed(this.t('purpose'), purpose);
+    if (goal) element += this.addAttributeNamed(this.t('goal'), goal);
+    if (characteristics) element += this.addAttributeNamed(this.t('characteristics'), characteristics);
+    if (notes) element += this.addAttributeNamed(this.t('notes'), notes);
     element += '</div>';
     element += '<div class="npc">';
     if (image) element += this.addImage(image);
