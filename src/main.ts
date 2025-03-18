@@ -1,6 +1,6 @@
-import { App, MarkdownPostProcessorContext, Plugin, PluginManifest, PluginSettingTab, Setting } from 'obsidian';
+import { App, MarkdownPostProcessorContext, Plugin, PluginManifest } from 'obsidian';
 import Parser from './parser';
-import viewInlinePlugin, { FrontmatterObserver, viewRender } from './view';
+import { FrontmatterObserver, viewRender } from './view';
 import { BPSettings, BPSettingTab, DEFAULT_SETTINGS } from './settings';
 
 export default class BPPlugin extends Plugin {

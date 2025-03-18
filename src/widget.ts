@@ -29,7 +29,7 @@ export class InlineWidget extends WidgetType {
 
   // Add CSS classes and return HTML element.
   // In "complex" cases it will get filled with the correct text/child elements later.
-  toDOM(view: EditorView): HTMLElement {
+  toDOM(_view: EditorView): HTMLElement {
     this.el.addClasses(this.cssClasses);
     return this.el;
   }
@@ -39,7 +39,7 @@ export class InlineWidget extends WidgetType {
    * Mostly useful for links, and makes results selectable.
    * If the widgets should always be expandable, make this always return false.
    */
-  ignoreEvent(event: MouseEvent | Event): boolean {
+  ignoreEvent(_event: MouseEvent | Event): boolean {
     return false;
     // instanceof check does not work in pop-out windows, so check it like this
     /*if (event.type === 'mousedown') {

@@ -89,10 +89,6 @@ export default class Parser {
     return row;
   }
 
-  private mixupArrays(array1: Array<string>, array2: Array<string>) {
-    return array1.flatMap(d => array2.map(v => d + v)).concat(array1.flatMap(d => array2.map(v => v + d)));
-  }
-
   private arrayContains(haystack: Array<string>, needle: string) {
     return haystack.indexOf(needle) !== -1;
   }

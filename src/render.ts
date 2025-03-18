@@ -27,12 +27,11 @@ export class Renderer {
      * asynchronous.
      */
     if (code.startsWith(this.settings.initializer)) {
-      let content: string = '';
       let result: Literal = '';
       const renderRootElement = createSpan({
         cls: ['betterpnp', 'betterpnp-inline'],
       });
-      content = code.substring(this.settings.initializer.length).trim();
+      const content = code.substring(this.settings.initializer.length).trim();
       try {
         this.renderFieldFromInput(content).then(result => (renderRootElement.innerHTML = result));
       } catch (error) {
