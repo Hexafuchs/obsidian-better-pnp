@@ -1,8 +1,8 @@
 {
-	"name": "@hexafuchs/better-pnp-obsidian",
+	"name": "@hexafuchs/obsidian-better-pnp",
 	"description": "Dynamic templates for better pen and paper writing",
 	"version": "1.0.0",
-	"homepage": "https://github.com/Hexafuchs/better-pnp-obsidian",
+	"homepage": "https://github.com/Hexafuchs/obsidian-better-pnp",
 	"contributors": [
 		{
 		"name": "Leo",
@@ -21,7 +21,7 @@
 		"templates"
 	],
 	"bugs": {
-		"url": "https://github.com/Hexafuchs/better-pnp-obsidian/issues"
+		"url": "https://github.com/Hexafuchs/obsidian-better-pnp/issues"
 	},
 	"license": "MIT",
 	"main": "src/main.js",
@@ -40,7 +40,7 @@
 		"@types/node": "^16.11.6",
 		"@types/luxon": "^3.2.0",
 		"builtin-modules": "3.3.0",
-		"esbuild": "0.17.3",
+		"esbuild": "0.25.1",
 		"obsidian": "latest",
 		"tslib": "2.4.0",
 		"typescript": "4.7.4",

@@ -1,3 +1,3 @@
 # Changelog
 
-All notable changes to `better-pnp-obsidian` will be documented in this file.
+All notable changes to `obsidian-better-pnp` will be documented in this file.

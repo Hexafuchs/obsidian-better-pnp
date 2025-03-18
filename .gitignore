@@ -14,7 +14,7 @@ dist-ssr
 *.local
 coverage
 docs
-main.js 
+main.js
 playground
 
 # Editor directories and files
