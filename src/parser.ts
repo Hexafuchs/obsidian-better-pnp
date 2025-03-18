@@ -169,6 +169,7 @@ export default class Parser {
     return this.addAttributeNamed(name, `${weight}${unit}`);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   parseNPC(frontmatter: any) {
     const name = frontmatter['name'];
     const age = frontmatter['age'];

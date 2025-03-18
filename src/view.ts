@@ -186,11 +186,13 @@ export function viewRender(
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type FrontmatterCallback = (frontmatter: any) => void;
 
 export class FrontmatterObserver {
   metadataCache: MetadataCache;
   debounceTask: NodeJS.Timeout;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   oldFrontmatter: any;
   running: boolean = true;
   eventRef: EventRef;
@@ -215,7 +217,6 @@ export class FrontmatterObserver {
   }
 
   run(changedFile: TFile) {
-    console.log(changedFile.path, changedFile, this, this === undefined);
     if (this === undefined || !this.running) {
       return;
     }

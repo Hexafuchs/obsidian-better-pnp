@@ -29,32 +29,12 @@ export class InlineWidget extends WidgetType {
 
   // Add CSS classes and return HTML element.
   // In "complex" cases it will get filled with the correct text/child elements later.
-  toDOM(_view: EditorView): HTMLElement {
+  toDOM(): HTMLElement {
     this.el.addClasses(this.cssClasses);
     return this.el;
   }
 
-  /* Make queries only editable when shift is pressed (or navigated inside with the keyboard
-   * or the mouse is placed at the end, but that is always possible regardless of this method).
-   * Mostly useful for links, and makes results selectable.
-   * If the widgets should always be expandable, make this always return false.
-   */
-  ignoreEvent(_event: MouseEvent | Event): boolean {
+  ignoreEvent(): boolean {
     return false;
-    // instanceof check does not work in pop-out windows, so check it like this
-    /*if (event.type === 'mousedown') {
-      const currentPos = this.view.posAtCoords({ x: (event as MouseEvent).x, y: (event as MouseEvent).y });
-      if ((event as MouseEvent).shiftKey) {
-        // Set the cursor after the element so that it doesn't select starting from the last cursor position.
-        if (currentPos) {
-          const { editor } = this.view.state.field(editorInfoField);
-          if (editor) {
-            editor.setCursor(editor.offsetToPos(currentPos));
-          }
-        }
-        return false;
-      }
-    }
-    return true;*/
   }
 }
