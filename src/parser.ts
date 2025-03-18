@@ -107,7 +107,9 @@ export default class Parser {
         let found = false;
         let output = "";
 
-        console.log(value);
+        if (value.startsWith("!")) {
+            return this.addAttribute(value.substring(1));
+        }
 
         for (let [terms, icon] of termMapping) {
             if (this.containsTerm(lc_value, terms)) {
