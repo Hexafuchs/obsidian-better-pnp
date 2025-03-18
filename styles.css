@@ -48,6 +48,13 @@
     flex-grow: 1;
 }
 
+.betterpnp .attribute-icon {
+    height: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .betterpnp .attribute-separator {
     width: 100%;
     flex-grow: 0;
