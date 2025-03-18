@@ -1,68 +1,62 @@
 import { App, Plugin, PluginSettingTab, Setting } from 'obsidian';
-import { Extension } from "@codemirror/state";
+import { Extension } from '@codemirror/state';
 import Parser from './parser';
 import { BPSettings } from './types';
 import viewInlinePlugin from './view';
 
-
 const DEFAULT_SETTINGS: BPSettings = {
-	initializer: '#'
-}
+  initializer: '#',
+};
 
 export default class BPPlugin extends Plugin {
-	settings: BPSettings;
-	parser: Parser;
+  settings: BPSettings;
+  parser: Parser;
 
-	private codeMirrorExtensions: Extension[];
+  async onload() {
+    await this.loadSettings();
 
-	async onload() {
-		await this.loadSettings();
+    this.addSettingTab(new BPSettingTab(this.app, this));
 
-		this.addSettingTab(new BPSettingTab(this.app, this));
+    this.registerEditorExtension(viewInlinePlugin(this.app, this.settings));
 
-		this.registerEditorExtension(
-			viewInlinePlugin(this.app, this.settings)
-		);
+    this.parser = new Parser(this.app);
+  }
 
-		this.parser = new Parser(this.app);
-	}
+  onunload() {}
 
-	onunload() {
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+  }
 
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+  async saveSettings() {
+    await this.saveData(this.settings);
+  }
 }
 
 class BPSettingTab extends PluginSettingTab {
-	plugin: BPPlugin;
+  plugin: BPPlugin;
 
-	constructor(app: App, plugin: BPPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+  constructor(app: App, plugin: BPPlugin) {
+    super(app, plugin);
+    this.plugin = plugin;
+  }
 
-	display(): void {
-		const {containerEl} = this;
+  display(): void {
+    const { containerEl } = this;
 
-		containerEl.empty();
+    containerEl.empty();
 
-		new Setting(containerEl)
-			.setName('Initializer')
-			.setDesc('Prefix to start rendering a better pnp block')
-			.addText(text => text
-				.setPlaceholder('!')
-				.setValue(this.plugin.settings.initializer)
-				.onChange(async (value) => {
-					this.plugin.settings.initializer = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+    new Setting(containerEl)
+      .setName('Initializer')
+      .setDesc('Prefix to start rendering a better pnp block')
+      .addText(text =>
+        text
+          .setPlaceholder('!')
+          .setValue(this.plugin.settings.initializer)
+          .onChange(async value => {
+            this.plugin.settings.initializer = value;
+            await this.plugin.saveSettings();
+          })
+      );
+  }
 }
-

@@ -1,182 +1,171 @@
-import { App } from "obsidian";
+import { App } from 'obsidian';
 
-import { AGENDER_FLAG_ICON, FEMALE_ICON, INTERSEX_ICON, MALE_ICON, NON_BINARY_FLAG_ICON, TRANSGENDER_FLAG_ICON } from "./icons/gender";
-import { GENDER_ABBR_MAPPING, GENDER_TERMS_MAPPING } from "./parser/gender";
-import { ABBR_MAPPING, TERM_MAPPING } from "./parser/base";
-import { SEXUALITY_ABBR_MAPPING, SEXUALITY_TERMS_MAPPING } from "./parser/sexuality";
-
+import { GENDER_ABBR_MAPPING, GENDER_TERMS_MAPPING } from './parser/gender';
+import { ABBR_MAPPING, TERM_MAPPING } from './parser/base';
+import { SEXUALITY_ABBR_MAPPING, SEXUALITY_TERMS_MAPPING } from './parser/sexuality';
 
 export default class Parser {
-    app: App;
+  app: App;
 
-    constructor(app: App) {
-        this.app = app;
+  constructor(app: App) {
+    this.app = app;
+  }
+
+  public parseEntry(type: string, frontmatter: Array<string>) {
+    switch (type) {
+      case 'npc':
+        return this.parseNPC(frontmatter);
+      default:
+        return 'None';
+    }
+  }
+
+  addAttributeNamed(key: string, value: string) {
+    let row = '<div class="attribute">';
+
+    row += '<div class="attribute-key">';
+    row += key;
+    row += '</div>';
+
+    row += '<span class="attribute-separator"></span>';
+
+    row += '<div class="attribute-value">';
+    row += value;
+    row += '</div>';
+
+    row += '</div>';
+    return row;
+  }
+
+  addAttribute(value: string) {
+    let row = '<div class="attribute attribute-single">';
+
+    row += '<div class="attribute-value attribute-value-single">';
+    row += value;
+    row += '</div>';
+
+    row += '</div>';
+    return row;
+  }
+
+  addImage(value: string) {
+    let row = '<div class="attribute attribute-image">';
+
+    row += '<div class="attribute-value attribute-image-container">';
+
+    const files = this.app.vault.getFiles().filter(e => e.name === value);
+    if (files.length === 0) {
+      return '';
     }
 
-    public parseEntry(type: string, frontmatter: Array<string>) {
-        switch (type) {
-            case "npc":
-                return this.parseNPC(frontmatter);
-            default:
-                return "None";
+    row += '<img src="';
+    const uri = this.app.vault.getResourcePath(files[0]);
+    row += uri;
+    row += '" class="attribute-image-source" alt="Could not load image">';
+
+    row += '</div>';
+
+    row += '</div>';
+    return row;
+  }
+
+  addIcon(value: string) {
+    let row = '<div class="attribute attribute-single attribute-icon">';
+
+    row += '<div class="attribute-value attribute-value-single attribute-value-icon attribute-value-icon-single">';
+    row += value;
+    row += '</div>';
+
+    row += '</div>';
+    return row;
+  }
+
+  private mixupArrays(array1: Array<string>, array2: Array<string>) {
+    return array1.flatMap(d => array2.map(v => d + v)).concat(array1.flatMap(d => array2.map(v => v + d)));
+  }
+
+  private arrayContains(haystack: Array<string>, needle: string) {
+    return haystack.indexOf(needle) !== -1;
+  }
+
+  private containsTerm(needle: string, haystack: Array<string>) {
+    return haystack.filter(e => needle.includes(e)).length > 0;
+  }
+
+  addMultiIcon(value: string, termMapping: Array<TERM_MAPPING>, abbrMapping: Array<ABBR_MAPPING>) {
+    const lc_value = value.toLowerCase().replace(' ', '').replace('-', '');
+    let found = false;
+    let output = '';
+
+    if (value.startsWith('!')) {
+      return this.addAttribute(value.substring(1));
+    }
+
+    for (const [terms, icon] of termMapping) {
+      if (this.containsTerm(lc_value, terms)) {
+        found = true;
+        output += icon;
+      }
+    }
+
+    if (!found && value === lc_value) {
+      const chars = lc_value.split('');
+      let match = [];
+      for (const [abbrs, icon] of abbrMapping) {
+        match = chars.filter(e => this.arrayContains(abbrs, e));
+        if (match.length === 1) {
+          output += icon;
+          chars.splice(chars.indexOf(match[0]), 1);
         }
+      }
+
+      if (chars.length === 0) {
+        found = true;
+      } else {
+        output = '';
+      }
     }
 
-    addAttributeNamed(key: string, value: string) {
-        let row = '<div class="attribute">';
-
-        row += '<div class="attribute-key">';
-        row += key;
-        row += '</div>';
-
-        row += '<span class="attribute-separator"></span>';
-
-        row += '<div class="attribute-value">';
-        row += value;
-        row += '</div>';
-
-        row += '</div>';
-        return row;
+    if (!found) {
+      return this.addAttribute(value);
     }
 
-    addAttribute(value: string) {
-        let row = '<div class="attribute attribute-single">';
+    return this.addIcon(output);
+  }
 
-        row += '<div class="attribute-value attribute-value-single">';
-        row += value;
-        row += '</div>';
+  addGenderIcon(value: string) {
+    return this.addMultiIcon(value, GENDER_TERMS_MAPPING, GENDER_ABBR_MAPPING);
+  }
 
-        row += '</div>';
-        return row;
-    }
+  addSexualityIcon(value: string) {
+    return this.addMultiIcon(value, SEXUALITY_TERMS_MAPPING, SEXUALITY_ABBR_MAPPING);
+  }
 
-    addImage(value: string) {
-        let row = '<div class="attribute attribute-image">';
+  parseNPC(frontmatter: any) {
+    const name = frontmatter['name'];
+    const age = frontmatter['age'];
+    const job = frontmatter['job'];
+    const purpose = frontmatter['purpose'];
+    const goal = frontmatter['goal'];
+    const image = frontmatter['image'];
+    const gender = frontmatter['gender'];
+    const sexuality = frontmatter['sexuality'];
 
-        row += '<div class="attribute-value attribute-image-container">';
+    let element = '<div class="npc">';
+    if (name) element += this.addAttribute(name);
+    if (age) element += this.addAttribute(age);
+    if (gender) element += this.addGenderIcon(gender);
+    if (sexuality) element += this.addSexualityIcon(sexuality);
+    if (job) element += this.addAttribute(job);
+    element += '</div>';
+    element += '<div class="npc">';
+    if (purpose) element += this.addAttributeNamed('Zweck', purpose);
+    if (goal) element += this.addAttributeNamed('Ziel', goal);
+    element += '</div>';
+    element += '<div class="npc">';
+    if (image) element += this.addImage(image);
+    element += '</div>';
 
-        let files = this.app.vault.getFiles().filter((e) => e.name === value);
-        if (files.length === 0) {
-            return "";
-        }
-
-        row += '<img src="';
-        let uri = this.app.vault.getResourcePath(files[0]);
-        row += uri;
-        row += '" class="attribute-image-source" alt="Could not load image">';
-
-        row += '</div>';
-
-        row += '</div>';
-        return row;
-    }
-
-    addIcon(value: string) {
-        let row = '<div class="attribute attribute-single attribute-icon">';
-
-        row += '<div class="attribute-value attribute-value-single attribute-value-icon attribute-value-icon-single">';
-        row += value;
-        row += '</div>';
-
-        row += '</div>';
-        return row;
-    }
-
-    private mixupArrays(array1: Array<string>, array2: Array<string>) {
-        return array1.flatMap(d => array2.map(v => d + v)).concat(array1.flatMap(d => array2.map(v => v + d)));
-    }
-
-    private mixupGenders(gender1_abbr: Array<string>, gender2_abbr: Array<string>, gender1: Array<string>, gender2: Array<string>) {
-        return this.mixupArrays(gender1_abbr, gender2_abbr).concat(this.mixupArrays(gender1, gender2));
-    }
-
-    private joinGenders(gender_abbr: Array<string>, gender: Array<string>) {
-        return gender_abbr.concat(gender);
-    }
-
-    private arrayContains(haystack: Array<string>, needle: string) {
-        return haystack.indexOf(needle) !== -1;
-    }
-
-    private containsTerm(needle: string, haystack: Array<string>) {
-        return haystack.filter(e => needle.includes(e)).length > 0;
-    }
-
-    addMultiIcon(value: string, termMapping: Array<TERM_MAPPING>, abbrMapping: Array<ABBR_MAPPING>) {
-        const lc_value = value.toLowerCase().replace(' ', '').replace('-', '');
-        let found = false;
-        let output = "";
-
-        if (value.startsWith("!")) {
-            return this.addAttribute(value.substring(1));
-        }
-
-        for (let [terms, icon] of termMapping) {
-            if (this.containsTerm(lc_value, terms)) {
-                found = true;
-                output += icon;
-            }
-        }
-
-        if (!found && value === lc_value) {
-            let chars = lc_value.split('');
-            let match = [];
-            for (let [abbrs, icon] of abbrMapping) {
-                match = chars.filter(e => this.arrayContains(abbrs, e));
-                if (match.length === 1) {
-                    output += icon;
-                    chars.splice(chars.indexOf(match[0]), 1)
-                }    
-            }
-
-            if (chars.length === 0) {
-                found = true;
-            } else {
-                output = "";
-            }
-        }
-
-        if (!found) {
-            return this.addAttribute(value);
-        }
-
-        return this.addIcon(output);
-    }
-
-    addGenderIcon(value: string) {
-        return this.addMultiIcon(value, GENDER_TERMS_MAPPING, GENDER_ABBR_MAPPING);
-    }
-
-    addSexualityIcon(value: string) {
-        return this.addMultiIcon(value, SEXUALITY_TERMS_MAPPING, SEXUALITY_ABBR_MAPPING);
-    }
-
-    parseNPC(frontmatter: any) {
-        const name = frontmatter['name'];
-        const age = frontmatter['age'];
-        const job = frontmatter['job'];
-        const purpose = frontmatter['purpose'];
-        const goal = frontmatter['goal'];
-        const image = frontmatter['image'];
-        const gender = frontmatter['gender'];
-        const sexuality = frontmatter['sexuality'];
-
-        let element = '<div class="npc">';
-        if (name) element += this.addAttribute(name);
-        if (age) element += this.addAttribute(age);
-        if (gender) element += this.addGenderIcon(gender);
-        if (sexuality) element += this.addSexualityIcon(sexuality);
-        if (job) element += this.addAttribute(job);
-        element += '</div>';
-        element += '<div class="npc">';
-        if (purpose) element += this.addAttributeNamed('Zweck', purpose);
-        if (goal) element += this.addAttributeNamed('Ziel', goal);
-        element += '</div>';
-        element += '<div class="npc">';
-        if (image) element += this.addImage(image);
-        element += '</div>';
-
-        return element;
-    }
-
+    return element;
+  }
 }
