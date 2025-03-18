@@ -72,9 +72,9 @@ export default class Parser {
     }
 
     addIcon(value: string) {
-        let row = '<div class="attribute attribute-single">';
+        let row = '<div class="attribute attribute-single attribute-icon">';
 
-        row += '<div class="attribute-value attribute-value-single attribute-icon attribute-icon-single">';
+        row += '<div class="attribute-value attribute-value-single attribute-value-icon attribute-value-icon-single">';
         row += value;
         row += '</div>';
 

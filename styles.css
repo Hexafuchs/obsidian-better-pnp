@@ -22,6 +22,15 @@
     max-width: 100%;
 }
 
+.betterpnp .attribute-icon {
+    padding: 4px;
+}
+
+.betterpnp .attribute-icon svg {
+    height: 36px;
+    width: 36px;
+}
+
 .betterpnp .attribute-key, .attribute-value {
     flex-basis: 0;
 }
@@ -48,8 +57,7 @@
     flex-grow: 1;
 }
 
-.betterpnp .attribute-icon {
-    height: 24px;
+.betterpnp .attribute-value-icon {
     display: flex;
     justify-content: center;
     align-items: center;
