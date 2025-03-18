@@ -2,14 +2,6 @@
 
 Small snippets to create parametrized pen and paper assets.
 
-## Installation
-
-You can install the package via npm (or another tool of your choosing):
-
-```bash
-npm install @hexafuchs/better-pnp-obsidian
-```
-
 ## Usage
 
 Clone into your .obsidian/plugins folder, restart Obsidian, and activate the plugin in the settings menu under community plugins section. If you haven't already, activate community plugins to see the plugin.
@@ -25,11 +17,16 @@ purpose:
 job: 
 gender: 
 sexuality: 
+hair_color: 
+skin_color: 
+species: 
+height: 
+weight: 
 image:
 ---
 ```
 
-> Pro Tip: You can create a template for this. If support for more properties is added, you can update the template, and then include the template into the existing files. Only newly added properties are added to the files this way.
+> Pro Tip: You can create a template for this. If support for more properties is added, you can update the template, and then include the template into the existing files. Only newly added properties are added to the files this way. Checkout the templates/ folder at https://github.com/Hexafuchs/obsidian-better-pnp for more info.  
 
 You then have to add the following snippet at the position where the snippet should be rendered:
 ```markdown
@@ -74,11 +71,11 @@ npm run test
 
 ## Changelog
 
-Please see [CHANGELOG](https://github.com/Hexafuchs/better-pnp-obsidian/blob/main/CHANGELOG.md) for more information on what has changed recently.
+Please see [CHANGELOG](https://github.com/Hexafuchs/obsidian-better-pnp/blob/main/CHANGELOG.md) for more information on what has changed recently.
 
 ## License
 
-The MIT License (MIT). Please see [License File](https://github.com/Hexafuchs/better-pnp-obsidian/blob/main/LICENSE.md) for more information.
+The MIT License (MIT). Please see [License File](https://github.com/Hexafuchs/obsidian-better-pnp/blob/main/LICENSE.md) for more information.
 
 ## Attributions 
 
