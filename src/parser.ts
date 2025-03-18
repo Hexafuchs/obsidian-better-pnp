@@ -29,7 +29,7 @@ export default class Parser {
     }
   }
 
-  addAttributeNamed(key: string, value: string) {
+  protected addAttributeNamed(key: string, value: string) {
     let row = '<div class="attribute">';
 
     row += '<div class="attribute-key">';
@@ -46,7 +46,7 @@ export default class Parser {
     return row;
   }
 
-  addAttribute(value: string) {
+  protected addAttribute(value: string) {
     let row = '<div class="attribute attribute-single">';
 
     row += '<div class="attribute-value attribute-value-single">';
@@ -57,7 +57,7 @@ export default class Parser {
     return row;
   }
 
-  addImage(value: string) {
+  protected addImage(value: string) {
     let row = '<div class="attribute attribute-image">';
 
     row += '<div class="attribute-value attribute-image-container">';
@@ -78,7 +78,7 @@ export default class Parser {
     return row;
   }
 
-  addIcon(value: string) {
+  protected addIcon(value: string) {
     let row = '<div class="attribute attribute-single attribute-icon">';
 
     row += '<div class="attribute-value attribute-value-single attribute-value-icon attribute-value-icon-single">';
@@ -89,15 +89,15 @@ export default class Parser {
     return row;
   }
 
-  private arrayContains(haystack: Array<string>, needle: string) {
+  protected arrayContains(haystack: Array<string>, needle: string) {
     return haystack.indexOf(needle) !== -1;
   }
 
-  private containsTerm(needle: string, haystack: Array<string>) {
+  protected containsTerm(needle: string, haystack: Array<string>) {
     return haystack.filter(e => needle.includes(e)).length > 0;
   }
 
-  addMultiIcon(value: string, termMapping: Array<TERM_MAPPING>, abbrMapping: Array<ABBR_MAPPING>) {
+  protected addMultiIcon(value: string, termMapping: Array<TERM_MAPPING>, abbrMapping: Array<ABBR_MAPPING>) {
     const lc_value = value.toLowerCase().replace(' ', '').replace('-', '');
     let found = false;
     let output = '';
@@ -138,22 +138,22 @@ export default class Parser {
     return this.addIcon(output);
   }
 
-  addGenderIcon(value: string) {
+  protected addGenderIcon(value: string) {
     return this.addMultiIcon(value, genderTermMappings(this.settings), genderAbbrMappings(this.settings));
   }
 
-  addSexualityIcon(value: string) {
+  protected addSexualityIcon(value: string) {
     return this.addMultiIcon(value, sexualityTermMappings(this.settings), sexualityAbbrMappings(this.settings));
   }
 
-  addColorNamed(name: string, color: string) {
+  protected addColorNamed(name: string, color: string) {
     if (color.startsWith(this.settings.escapePrefix)) {
       return this.addAttributeNamed(name, color.substring(this.settings.escapePrefix.length));
     }
     return this.addAttributeNamed(name, `<div class="attribute-color" style="background-color: ${color};"></div>`);
   }
 
-  addHeightNamed(name: string, height: string) {
+  protected addHeightNamed(name: string, height: string) {
     if (height.startsWith(this.settings.escapePrefix)) {
       return this.addAttributeNamed(name, height.substring(this.settings.escapePrefix.length));
     }
@@ -161,7 +161,7 @@ export default class Parser {
     return this.addAttributeNamed(name, `${height}${unit}`);
   }
 
-  addWeightNamed(name: string, weight: string) {
+  protected addWeightNamed(name: string, weight: string) {
     if (weight.startsWith(this.settings.escapePrefix)) {
       return this.addAttributeNamed(name, weight.substring(this.settings.escapePrefix.length));
     }
