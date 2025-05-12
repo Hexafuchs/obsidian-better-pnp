@@ -37,7 +37,7 @@
     "docs": "typedoc"
   },
   "devDependencies": {
-    "@types/node": "^22.15.3",
+    "@types/node": "^22.15.17",
     "@types/luxon": "^3.6.2",
     "builtin-modules": "5.0.0",
     "esbuild": "0.25.4",
