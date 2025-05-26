@@ -60,7 +60,7 @@
   "dependencies": {
     "@codemirror/language": "https://github.com/lishid/cm-language",
     "@codemirror/state": "^6.0.1",
-    "@codemirror/view": "^6.36.7",
+    "@codemirror/view": "^6.36.8",
     "luxon": "^3.6.1"
   }
 }
