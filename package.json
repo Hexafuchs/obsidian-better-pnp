@@ -44,7 +44,7 @@
     "obsidian": "latest",
     "tslib": "2.8.1",
     "typescript": "5.8.3",
-    "typedoc": "^0.28.4",
+    "typedoc": "^0.28.5",
     "stylelint": "^16.20.0",
     "stylelint-config-recommended": "^15.0.0",
     "stylelint-config-sass-guidelines": "^12.1.0",
