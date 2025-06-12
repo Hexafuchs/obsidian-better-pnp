@@ -1,3 +1,5 @@
+# Moved to https://codeberg.org/Hexafuchs/obsidian-better-pnp
+
 # Better Pen and Paper Obsidian Writing
 
 Small snippets to create parametrized pen and paper assets.
